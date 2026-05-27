@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>oO吼的专属点歌台</title>
+    <style>
+        /* 保留原有所有样式,以下是新增+微调样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "Heiti SC", sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            padding: 30px;
+            position: relative;
+        }
+        .page-title {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 28px;
+            margin-bottom: 25px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        /* ========== 新增：主播选择样式 ========== */
+        .anchor-select-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        .anchor-btn {
+            padding: 8px 20px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            background: #fff;
+            color: #2c3e50;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .anchor-btn:hover {
+            border-color: #4a90e2;
+            color: #4a90e2;
+        }
+        .anchor-btn.active {
+            background: #4a90e2;
+            color: #fff;
+            border-color: #4a90e2;
+        }
+
+        .function-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            align-items: center;
+        }
+        @media (max-width: 768px) {
+            .function-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 20px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+        .search-input::placeholder {
+            color: #aab7c4;
+        }
+        .category-select {
+            padding: 12px 20px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #2c3e50;
+            background: #fff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .category-select:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+        .blind-box-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #ff6b8b 0%, #ff4757 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .blind-box-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3);
+        }
+        .blind-box-btn:active {
+            transform: translateY(0);
+        }
+        .song-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        @media (max-width: 768px) {
+            .song-list {
+                grid-template-columns: 1fr;
+            }
+        }
+        .song-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 18px;
+            border-left: 4px solid #4a90e2;
+            transition: all 0.3s ease;
+        }
+        .song-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+            background: #fff;
+        }
+        .song-name {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .song-info {
+            display: flex;
+            justify-content: space-between;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .song-singer {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .song-category {
+            background: #e9ecef;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .no-result {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+            font-size: 18px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        .blind-box-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .blind-box-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background: #fff;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        .blind-box-modal.active .modal-content {
+            transform: scale(1);
+        }
+        .modal-title {
+            color: #ff4757;
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        .modal-song {
+            margin: 25px 0;
+        }
+        .modal-song-name {
+            font-size: 26px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .modal-song-singer {
+            font-size: 18px;
+            color: #6c757d;
+        }
+        .close-modal-btn {
+            padding: 10px 24px;
+            background: #2c3e50;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+        .close-modal-btn:hover {
+            background: #34495e;
+        }
+        .category-飘站歌 { border-left-color: #4a90e2; }
+        .category-古风歌 { border-left-color: #9b59b6; }
+        .category-粤语歌 { border-left-color: #e74c3c; }
+        .category-数字歌 { border-left-color: #2ecc71; }
+        .category-英文歌 { border-left-color: #f39c12; }
+        .category-一字歌 { border-left-color: #1abc9c; }
+        .category-二字歌 { border-left-color: #3498db; }
+        .category-三字歌 { border-left-color: #95a5a6; }
+        .category-四字歌 { border-left-color: #7395ae; }
+        .category-五字歌 { border-left-color: #9a8c9f; }
+        .category-六字歌 { border-left-color: #8fb9a8; }
+        .category-七字歌 { border-left-color: #e8b86d; }
+        .category-八字歌 { border-left-color: #b0bec5; }
+        .category-九字歌 { border-left-color: #8b4513; }
+        .category-十字以上歌 { border-left-color: #f5f0e1; }
+
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .pagination-btn {
+            padding: 8px 16px;
+            border: 1px solid #e0e6ed;
+            border-radius: 6px;
+            background: #fff;
+            color: #2c3e50;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .pagination-btn:hover:not(:disabled) {
+            border-color: #4a90e2;
+            color: #4a90e2;
+        }
+        .pagination-btn:disabled {
+            color: #aab7c4;
+            cursor: not-allowed;
+            background: #f8f9fa;
+        }
+        .pagination-btn.active {
+            background: #4a90e2;
+            color: #fff;
+            border-color: #4a90e2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">oO吼的专属点歌台</h1>
+
+        <!-- ========== 新增：主播选择区域 ========== -->
+        <div class="anchor-select-area" id="anchorSelectArea">
+            <!-- 主播按钮会通过JS自动生成 -->
+        </div>
+
+        <!-- 功能区：搜索+分类+盲盒 -->
+        <div class="function-bar">
+            <input type="text" class="search-input" id="searchInput" placeholder="搜索歌曲名/歌手名...">
+            <select class="category-select" id="categorySelect">
+                <option value="all">全部分类</option>
+                <!-- 分类选项会通过JS自动生成 -->
+            </select>
+            <button class="blind-box-btn" id="blindBoxBtn">
+                🎁 抽歌曲盲盒
+            </button>
+        </div>
+
+        <!-- 歌曲列表容器 -->
+        <ul class="song-list" id="songList"></ul>
+
+        <!-- 分页容器 -->
+        <div class="pagination" id="pagination"></div>
+
+        <!-- 盲盒弹窗 -->
+        <div class="blind-box-modal" id="blindBoxModal">
+            <div class="modal-content">
+                <h2 class="modal-title">恭喜抽到！</h2>
+                <div class="modal-song" id="modalSong">
+                    <div class="modal-song-name">歌曲名</div>
+                    <div class="modal-song-singer">歌手名</div>
+                </div>
+                <button class="close-modal-btn" id="closeModalBtn">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 1. 定义主播和对应歌单 ==========
+        // 1.1 主播列表（可自定义添加/修改）
+        const anchors = [
+            { id: "anchor1", name: "主播A" },
+            { id: "anchor2", name: "主播B" },
+            { id: "anchor3", name: "主播C" },
+            { id: "all", name: "全部主播" } // 可选：显示所有主播的歌单
+        ];
+
+        // 1.2 原始歌曲数据（保留原有）
+        const allSongs = [
+            {"name":"蝶","singer":"谭维维","category":"飘站歌"},
+            {"name":"魂","singer":"信（苏见信）","category":"飘站歌"},
+            {"name":"默","singer":"那英","category":"飘站歌"},
+            {"name":"河流","singer":"汪峰","category":"飘站歌"},
+            {"name":"投降","singer":"张惠妹","category":"飘站歌"},
+            {"name":"空心","singer":"光泽","category":"飘站歌"},
+            {"name":"离歌","singer":"信乐团","category":"飘站歌"},
+            {"name":"难道","singer":"羽泉","category":"飘站歌"},
+            {"name":"皮囊","singer":"萧敬腾","category":"飘站歌"},
+            {"name":"麒麟","singer":"早安","category":"飘站歌"},
+            {"name":"山海","singer":"草东没有派对","category":"飘站歌"},
+            {"name":"无辜","singer":"曹格","category":"飘站歌"},
+            {"name":"悟空","singer":"戴荃","category":"飘站歌"},
+            {"name":"Simon","singer":"丁世光","category":"飘站歌"},
+            {"name":"High 歌","singer":"黄龄","category":"飘站歌"},
+            {"name":"不重逢","singer":"华晨宇","category":"飘站歌"},
+            {"name":"好春光","singer":"吴彤","category":"飘站歌"},
+            {"name":"亲爱的","singer":"徐佳莹","category":"飘站歌"},
+            {"name":"情歌王","singer":"古巨基","category":"飘站歌"},
+            {"name":"我管你","singer":"华晨宇","category":"飘站歌"},
+            {"name":"舞女泪","singer":"韩宝仪","category":"飘站歌"},
+            {"name":"悟空传","singer":"赵英俊","category":"飘站歌"},
+            {"name":"都市沙漠","singer":"旅行团乐队","category":"飘站歌"},
+            {"name":"海阔天空","singer":"Beyond","category":"飘站歌"},
+            {"name":"寒鸦少年","singer":"华晨宇","category":"飘站歌"},
+            {"name":"三天三夜","singer":"张惠妹","category":"飘站歌"},
+            {"name":"寂寞先生","singer":"曹格","category":"飘站歌"},
+            {"name":"没离开过","singer":"林志炫","category":"飘站歌"},
+            {"name":"青藏高原","singer":"李娜","category":"飘站歌"},
+            {"name":"十年人间","singer":"李常超","category":"飘站歌"},
+            {"name":"肆意的河","singer":"苏诗丁","category":"飘站歌"},
+            {"name":"天高地厚","singer":"信乐团","category":"飘站歌"},
+            {"name":"天下无双","singer":"张靓颖","category":"飘站歌"},
+            {"name":"我们的爱","singer":"F.I.R. 飞儿乐团","category":"飘站歌"},
+            {"name":"也许明天","singer":"张惠妹","category":"飘站歌"},
+            {"name":"昨日青空","singer":"尤长靖","category":"飘站歌"},
+            {"name":"左手指月","singer":"萨顶顶","category":"飘站歌"},
+            {"name":"国王与乞丐","singer":"华晨宇、杨宗纬","category":"飘站歌"},
+            {"name":"王子的新衣","singer":"萧敬腾","category":"飘站歌"},
+            {"name":"我们说好的","singer":"张靓颖","category":"飘站歌"},
+            {"name":"黑夜问白天","singer":"林俊杰","category":"飘站歌"},
+            {"name":"火烧的寂寞","singer":"信（苏见信）","category":"飘站歌"},
+            {"name":"死了都要爱","singer":"信乐团","category":"飘站歌"},
+            {"name":"无情的情书","singer":"信乐团","category":"飘站歌"},
+            {"name":"易燃易爆炸","singer":"陈粒","category":"飘站歌"},
+            {"name":"缘分一道桥","singer":"王力宏、谭维维","category":"飘站歌"},
+            {"name":"只为你着迷","singer":"周笔畅","category":"飘站歌"},
+            {"name":"追梦赤子心","singer":"GALA 乐队","category":"飘站歌"},
+            {"name":"烟火里的尘埃","singer":"华晨宇","category":"飘站歌"},
+            {"name":"好想大声说爱你","singer":"BAAD","category":"飘站歌"},
+            {"name":"向天再借五百年","singer":"韩磊","category":"飘站歌"},
+            {"name":"好想爱这个世界啊","singer":"华晨宇","category":"飘站歌"},
+            {"name":"你的一生我只借一晚","singer":"曹格","category":"飘站歌"},
+            {"name":"输了你赢了世界又如何","singer":"林志炫","category":"飘站歌"},
+            {"name":"囍","singer":"葛东琪","category":"古风歌"},
+            {"name":"不染","singer":"毛不易","category":"古风歌"},
+            {"name":"丰碑","singer":"小柯、董贞","category":"古风歌"},
+            {"name":"皈依","singer":"皈依小能手","category":"古风歌"},
+            {"name":"剑魂","singer":"李炜","category":"古风歌"},
+            {"name":"借月","singer":"王天阳","category":"古风歌"},
+            {"name":"凉凉","singer":"张碧晨、杨宗纬","category":"古风歌"},
+            {"name":"年轮","singer":"张碧晨","category":"古风歌"},
+            {"name":"起灵","singer":"小曲儿","category":"古风歌"},
+            {"name":"芊芊","singer":"回音哥","category":"古风歌"},
+            {"name":"琴师","singer":"音频怪物","category":"古风歌"},
+            {"name":"让酒","singer":"摩登兄弟刘宇宁","category":"古风歌"},
+            {"name":"汝南","singer":"等什么君","category":"古风歌"},
+            {"name":"天下","singer":"张杰","category":"古风歌"},
+            {"name":"为龙","singer":"河图","category":"古风歌"},
+            {"name":"怎叹","singer":"郑鱼","category":"古风歌"},
+            {"name":"半山腰","singer":"要不要买菜","category":"古风歌"},
+            {"name":"不谓侠","singer":"萧忆情Alex","category":"古风歌"},
+            {"name":"广寒宫","singer":"丸子呦","category":"古风歌"},
+            {"name":"九张机","singer":"叶炫清","category":"古风歌"},
+            {"name":"兰亭序","singer":"周杰伦","category":"古风歌"},
+            {"name":"青玉恋","singer":"Tacke竹桑","category":"古风歌"},
+            {"name":"情字难","singer":"糯米Nomi","category":"古风歌"},
+            {"name":"声声慢","singer":"崔开潮","category":"古风歌"},
+            {"name":"桃花诺","singer":"邓紫棋","category":"古风歌"},
+            {"name":"相见欢","singer":"小曲儿","category":"古风歌"},
+            {"name":"逍遥叹","singer":"胡歌","category":"古风歌"},
+            {"name":"小嫦娥","singer":"安子与九妹","category":"古风歌"},
+            {"name":"刀剑如梦","singer":"周华健","category":"古风歌"},
+            {"name":"明月天涯","singer":"五音Jw","category":"古风歌"},
+            {"name":"千金埋骨","singer":"Assen捷","category":"古风歌"},
+            {"name":"山有木兮","singer":"伦桑","category":"古风歌"},
+            {"name":"一曲相思","singer":"半阳","category":"古风歌"},
+            {"name":"知否知否","singer":"胡夏、郁可唯","category":"古风歌"},
+            {"name":"醉梦前尘","singer":"林志炫","category":"古风歌"},
+            {"name":"沧海一声笑","singer":"许冠杰","category":"古风歌"},
+            {"name":"曲终人亦散","singer":"叶洛洛","category":"古风歌"},
+            {"name":"昨夜小楼又东风","singer":"费玉清","category":"古风歌"},
+            {"name":"我的一个道姑朋友","singer":"Lon","category":"古风歌"},
+            {"name":"单车","singer":"陈奕迅","category":"粤语歌"},
+            {"name":"浮夸","singer":"陈奕迅","category":"粤语歌"},
+            {"name":"够钟","singer":"周柏豪","category":"粤语歌"},
+            {"name":"红日","singer":"李克勤","category":"粤语歌"},
+            {"name":"七友","singer":"梁汉文","category":"粤语歌"},
+            {"name":"情人","singer":"Beyond","category":"粤语歌"},
+            {"name":"无赖","singer":"郑中基","category":"粤语歌"},
+            {"name":"献世","singer":"陈小春","category":"粤语歌"},
+            {"name":"爱与诚","singer":"古巨基","category":"粤语歌"},
+            {"name":"当年情","singer":"张国荣","category":"粤语歌"},
+            {"name":"李香兰","singer":"张学友","category":"粤语歌"},
+            {"name":"上海滩","singer":"叶丽仪","category":"粤语歌"},
+            {"name":"无条件","singer":"陈奕迅","category":"粤语歌"},
+            {"name":"吴哥窟","singer":"吴雨霏","category":"粤语歌"},
+            {"name":"喜欢你","singer":"Beyond","category":"粤语歌"},
+            {"name":"游乐场","singer":"谢霆锋","category":"粤语歌"},
+            {"name":"不该用情","singer":"莫叫姐姐","category":"粤语歌"},
+            {"name":"不如不见","singer":"陈奕迅","category":"粤语歌"},
+            {"name":"春夏秋冬","singer":"张国荣","category":"粤语歌"},
+            {"name":"饿狼传说","singer":"张学友","category":"粤语歌"},
+            {"name":"风的季节","singer":"Soler","category":"粤语歌"},
+            {"name":"富士山下","singer":"陈奕迅","category":"粤语歌"},
+            {"name":"光辉岁月","singer":"Beyond","category":"粤语歌"},
+            {"name":"海阔天空","singer":"Beyond","category":"粤语歌"},
+            {"name":"护花使者","singer":"李克勤","category":"粤语歌"},
+            {"name":"灰色轨迹","singer":"Beyond","category":"粤语歌"},
+            {"name":"旧欢如梦","singer":"李克勤","category":"粤语歌"},
+            {"name":"旧情绵绵","singer":"张学友","category":"粤语歌"},
+            {"name":"难念的经","singer":"周华健","category":"粤语歌"},
+            {"name":"你瞒我瞒","singer":"陈柏宇","category":"粤语歌"},
+            {"name":"千千阙歌","singer":"陈慧娴","category":"粤语歌"},
+            {"name":"倩女幽魂","singer":"张国荣","category":"粤语歌"},
+            {"name":"相依为命","singer":"陈小春","category":"粤语歌"},
+            {"name":"遥远的她","singer":"张学友","category":"粤语歌"},
+            {"name":"一生所爱","singer":"卢冠廷","category":"粤语歌"},
+            {"name":"友情岁月","singer":"郑伊健","category":"粤语歌"},
+            {"name":"真的爱你","singer":"Beyond","category":"粤语歌"},
+            {"name":"终生契约","singer":"陈奕迅","category":"粤语歌"},
+            {"name":"不浪漫罪名","singer":"王杰","category":"粤语歌"},
+            {"name":"讲不出再见","singer":"谭咏麟","category":"粤语歌"},
+            {"name":"偏偏少年情","singer":"陈百强","category":"粤语歌"},
+            {"name":"偏偏喜欢你","singer":"陈百强","category":"粤语歌"},
+            {"name":"涩谷驿前等","singer":"杨千嬅","category":"粤语歌"},
+            {"name":"少女的祈祷","singer":"杨千嬅","category":"粤语歌"},
+            {"name":"谁明浪子心","singer":"王杰","category":"粤语歌"},
+            {"name":"是但求其爱","singer":"陈奕迅","category":"粤语歌"},
+            {"name":"下一站天后","singer":"Twins","category":"粤语歌"},
+            {"name":"笑哈哈先生","singer":"许冠杰","category":"粤语歌"},
+            {"name":"一生中最爱","singer":"谭咏麟","category":"粤语歌"},
+            {"name":"月半小夜曲","singer":"李克勤","category":"粤语歌"},
+            {"name":"分分钟需要你","singer":"林子祥","category":"粤语歌"},
+            {"name":"吻你吻上太空","singer":"陈奕迅","category":"粤语歌"},
+            {"name":"可惜我是水瓶座","singer":"杨千嬅","category":"粤语歌"},
+            {"name":"每天爱你多一些","singer":"张学友","category":"粤语歌"},
+            {"name":"只想一生跟你走","singer":"张学友","category":"粤语歌"},
+            {"name":"我们都是这样长大的","singer":"郑秀文","category":"粤语歌"},
+            {"name":"11","singer":"队长、黄礼格","category":"数字歌"},
+            {"name":"0932","singer":"陈小春","category":"数字歌"},
+            {"name":"1022","singer":"Bomb比尔","category":"数字歌"},
+            {"name":"2099","singer":"Charil XCX、Troye Sivan","category":"数字歌"},
+            {"name":"4400","singer":"曾一鸣","category":"数字歌"},
+            {"name":"4am","singer":"XMASwu","category":"数字歌"},
+            {"name":"38度6","singer":"黑龙","category":"数字歌"},
+            {"name":"1-10表白体","singer":"陈柯宇","category":"数字歌"},
+            {"name":"101号公路","singer":"光泽","category":"数字歌"},
+            {"name":"编号89757","singer":"林俊杰","category":"数字歌"},
+            {"name":"A.I.N.Y.","singer":"邓紫棋 (G.E.M.)","category":"英文歌"},
+            {"name":"Always Online","singer":"林俊杰","category":"英文歌"},
+            {"name":"Bad boy","singer":"张雨生","category":"英文歌"},
+            {"name":"Can you feel my world","singer":"王力宏","category":"英文歌"},
+            {"name":"Dear john","singer":"汤小康","category":"英文歌"},
+            {"name":"Forever Love","singer":"王力宏","category":"英文歌"},
+            {"name":"Fun Run","singer":"胡彦斌","category":"英文歌"},
+            {"name":"Here we are","singer":"华晨宇","category":"英文歌"},
+            {"name":"Julia","singer":"王力宏","category":"英文歌"},
+            {"name":"Kiss Goodbye","singer":"王力宏","category":"英文歌"},
+            {"name":"Lemon Tree","singer":"Fool's Garden","category":"英文歌"},
+            {"name":"Love Love Love","singer":"Nu Virgos","category":"英文歌"},
+            {"name":"Love UU","singer":"林俊杰","category":"英文歌"},
+            {"name":"LOVE YOU","singer":"中岛美雪","category":"英文歌"},
+            {"name":"Lydia","singer":"陈建宁、阿沁","category":"英文歌"},
+            {"name":"May I Love You","singer":"Sting","category":"英文歌"},
+            {"name":"Melody","singer":"陶喆","category":"英文歌"},
+            {"name":"Memory","singer":"薛之谦","category":"英文歌"},
+            {"name":"Super Star","singer":"Sweetbox","category":"英文歌"},
+            {"name":"Superwoman","singer":"Stevie Wonder","category":"英文歌"},
+            {"name":"Susan说","singer":"陶喆","category":"英文歌"},
+            {"name":"Tell Me","singer":"Jinusean","category":"英文歌"},
+            {"name":"Tiktok Baby","singer":"王琳凯","category":"英文歌"},
+            {"name":"Too Bad","singer":"林俊杰","category":"英文歌"},
+            {"name":"You raise me up","singer":"Secret Garden","category":"英文歌"},
+            {"name":"爱","singer":"莫文蔚","category":"一字歌"},
+            {"name":"别","singer":"薛之谦","category":"一字歌"},
+            {"name":"当","singer":"动力火车","category":"一字歌"},
+            {"name":"风","singer":"刘惜君","category":"一字歌"},
+            {"name":"枫","singer":"周杰伦","category":"一字歌"},
+            {"name":"还","singer":"林俊杰","category":"一字歌"},
+            {"name":"红","singer":"张国荣","category":"一字歌"},
+            {"name":"花","singer":"华晨宇","category":"一字歌"},
+            {"name":"欢","singer":"孙悦","category":"一字歌"},
+            {"name":"火","singer":"张惠妹","category":"一字歌"},
+            {"name":"借","singer":"毛不易","category":"一字歌"},
+            {"name":"蓝","singer":"陈亦云","category":"一字歌"},
+            {"name":"零","singer":"柯有伦","category":"一字歌"},
+            {"name":"笼","singer":"张碧晨","category":"一字歌"},
+            {"name":"茫","singer":"李润祺","category":"一字歌"},
+            {"name":"你","singer":"林依晨","category":"一字歌"},
+            {"name":"念","singer":"周深","category":"一字歌"},
+            {"name":"暖","singer":"梁静茹","category":"一字歌"},
+            {"name":"骗","singer":"薛之谦","category":"一字歌"},
+            {"name":"让","singer":"萧煌奇","category":"一字歌"},
+            {"name":"谁","singer":"廖俊涛","category":"一字歌"},
+            {"name":"她","singer":"王思远","category":"一字歌"},
+            {"name":"叹","singer":"黄龄","category":"一字歌"},
+            {"name":"逃","singer":"孙楠","category":"一字歌"},
+            {"name":"退","singer":"卫兰","category":"一字歌"},
+            {"name":"问","singer":"陈淑桦","category":"一字歌"},
+            {"name":"我","singer":"张国荣","category":"一字歌"},
+            {"name":"痒","singer":"黄龄","category":"一字歌"},
+            {"name":"跃","singer":"周笔畅","category":"一字歌"},
+            {"name":"爱错","singer":"王力宏","category":"二字歌"},
+            {"name":"爱你","singer":"王心凌","category":"二字歌"},
+            {"name":"爱情","singer":"莫文蔚","category":"二字歌"},
+            {"name":"爱人","singer":"王菲","category":"二字歌"},
+            {"name":"爱上","singer":"宋念宇","category":"二字歌"},
+            {"name":"暧昧","singer":"杨丞琳","category":"二字歌"},
+            {"name":"安静","singer":"周杰伦","category":"二字歌"},
+            {"name":"安妮","singer":"王杰","category":"二字歌"},
+            {"name":"暗号","singer":"周杰伦","category":"二字歌"},
+            {"name":"暗香","singer":"沙宝亮","category":"二字歌"},
+            {"name":"白鸽","singer":"伍佰 & China Blue","category":"二字歌"},
+            {"name":"白狐","singer":"陈瑞","category":"二字歌"},
+            {"name":"败将","singer":"陈势安","category":"二字歌"},
+            {"name":"包容","singer":"郑源","category":"二字歌"},
+            {"name":"宝贝","singer":"张悬","category":"二字歌"},
+            {"name":"保留","singer":"郭顶","category":"二字歌"},
+            {"name":"贝贝","singer":"李荣浩","category":"二字歌"},
+            {"name":"背包","singer":"苏有朋","category":"二字歌"},
+            {"name":"背叛","singer":"曹格","category":"二字歌"},
+            {"name":"表态","singer":"梁博","category":"二字歌"},
+            {"name":"冰雨","singer":"刘德华","category":"二字歌"},
+            {"name":"不甘","singer":"陈粒","category":"二字歌"},
+            {"name":"不空","singer":"陈粒","category":"二字歌"},
+            {"name":"不如","singer":"秦海清","category":"二字歌"},
+            {"name":"不删","singer":"庄心妍","category":"二字歌"},
+            {"name":"不在","singer":"韩安旭","category":"二字歌"},
+            {"name":"步崖","singer":"胡66","category":"二字歌"},
+            {"name":"彩虹","singer":"周杰伦","category":"二字歌"},
+            {"name":"彩券","singer":"薛之谦","category":"二字歌"},
+            {"name":"残废","singer":"吴克群","category":"二字歌"},
+            {"name":"曹操","singer":"林俊杰","category":"二字歌"},
+            {"name":"拆穿","singer":"薛之谦","category":"二字歌"},
+            {"name":"车站","singer":"李健","category":"二字歌"},
+            {"name":"尘埃","singer":"家家","category":"二字歌"},
+            {"name":"趁早","singer":"张惠妹","category":"二字歌"},
+            {"name":"称谓","singer":"郑润泽","category":"二字歌"},
+            {"name":"称职","singer":"郑润泽","category":"二字歌"},
+            {"name":"成都","singer":"赵雷","category":"二字歌"},
+            {"name":"成全","singer":"刘若英","category":"二字歌"},
+            {"name":"迟迟","singer":"薛之谦","category":"二字歌"},
+            {"name":"翅膀","singer":"林俊杰","category":"二字歌"},
+            {"name":"崇拜","singer":"梁静茹","category":"二字歌"},
+            {"name":"出卖","singer":"那英","category":"二字歌"},
+            {"name":"传奇","singer":"李健","category":"二字歌"},
+            {"name":"窗外","singer":"李琛","category":"二字歌"},
+            {"name":"春泥","singer":"庾澄庆","category":"二字歌"},
+            {"name":"春雪","singer":"陈鸿宇","category":"二字歌"},
+            {"name":"大海","singer":"张雨生","category":"二字歌"},
+            {"name":"大眠","singer":"王心凌","category":"二字歌"},
+            {"name":"大鱼","singer":"周深","category":"二字歌"},
+            {"name":"当你","singer":"王心凌","category":"二字歌"},
+            {"name":"倒带","singer":"蔡依林","category":"二字歌"},
+            {"name":"稻香","singer":"周杰伦","category":"二字歌"},
+            {"name":"叮咚","singer":"徐怀钰","category":"二字歌"},
+            {"name":"东西","singer":"林俊呈","category":"二字歌"},
+            {"name":"冻结","singer":"林俊杰","category":"二字歌"},
+            {"name":"渡情","singer":"左宏元、张慧清","category":"二字歌"},
+            {"name":"断点","singer":"张敬轩","category":"二字歌"},
+            {"name":"儿时","singer":"刘昊霖","category":"二字歌"},
+            {"name":"发热","singer":"曾轶可","category":"二字歌"},
+            {"name":"反正","singer":"薛之谦","category":"二字歌"},
+            {"name":"放生","singer":"范逸臣","category":"二字歌"},
+            {"name":"奉劝","singer":"贺敬轩","category":"二字歌"},
+            {"name":"奉上","singer":"刘宇宁","category":"二字歌"},
+            {"name":"浮生","singer":"刘莱斯","category":"二字歌"},
+            {"name":"高尚","singer":"薛之谦","category":"二字歌"},
+            {"name":"告白","singer":"王菀之","category":"二字歌"},
+            {"name":"哥哥","singer":"常石磊","category":"二字歌"},
+            {"name":"搁浅","singer":"周杰伦","category":"二字歌"},
+            {"name":"够爱","singer":"东城卫、曾沛慈","category":"二字歌"},
+            {"name":"怪咖","singer":"薛之谦","category":"二字歌"},
+            {"name":"怪兽","singer":"方大同","category":"二字歌"},
+            {"name":"光白","singer":"陈粒","category":"二字歌"},
+            {"name":"光荣","singer":"BOBO组合","category":"二字歌"},
+            {"name":"轨迹","singer":"周杰伦","category":"二字歌"},
+            {"name":"过火","singer":"张信哲","category":"二字歌"},
+            {"name":"过门","singer":"胡66","category":"二字歌"},
+            {"name":"还我","singer":"杨丞琳","category":"二字歌"},
+            {"name":"海浪","singer":"黄品源","category":"二字歌"},
+            {"name":"害怕","singer":"林俊杰","category":"二字歌"},
+            {"name":"耗尽","singer":"薛之谦、郭聪明","category":"二字歌"},
+            {"name":"和你","singer":"余佳运","category":"二字歌"},
+            {"name":"红豆","singer":"王菲","category":"二字歌"},
+            {"name":"红颜","singer":"胡彦斌","category":"二字歌"},
+            {"name":"猴笼","singer":"张艺兴","category":"二字歌"},
+            {"name":"后来","singer":"刘若英","category":"二字歌"},
+            {"name":"狐狸","singer":"薛之谦","category":"二字歌"},
+            {"name":"胡闹","singer":"吴克群","category":"二字歌"},
+            {"name":"花海","singer":"周杰伦","category":"二字歌"},
+            {"name":"花香","singer":"许绍洋","category":"二字歌"},
+            {"name":"画心","singer":"张靓颖","category":"二字歌"},
+            {"name":"缓缓","singer":"薛之谦","category":"二字歌"},
+            {"name":"皇帝","singer":"胡彦斌","category":"二字歌"},
+            {"name":"黄昏","singer":"周传雄","category":"二字歌"},
+            {"name":"谎话","singer":"薛之谦","category":"二字歌"},
+            {"name":"火苗","singer":"格格","category":"二字歌"},
+            {"name":"记得","singer":"张惠妹","category":"二字歌"},
+            {"name":"佳人","singer":"鬼卞","category":"二字歌"},
+            {"name":"嘉宾","singer":"张远","category":"二字歌"},
+            {"name":"假如","singer":"信乐团","category":"二字歌"},
+            {"name":"间距","singer":"郑润泽","category":"二字歌"},
+            {"name":"剪爱","singer":"张惠妹","category":"二字歌"},
+            {"name":"渐冷","singer":"雪二","category":"二字歌"},
+            {"name":"江南","singer":"林俊杰","category":"二字歌"},
+            {"name":"解脱","singer":"张惠妹","category":"二字歌"},
+            {"name":"戒烟","singer":"李荣浩","category":"二字歌"},
+            {"name":"借口","singer":"周杰伦","category":"二字歌"},
+            {"name":"今天","singer":"刘德华","category":"二字歌"},
+            {"name":"矜持","singer":"王菲","category":"二字歌"},
+            {"name":"九妹","singer":"黄鹤翔","category":"二字歌"},
+            {"name":"诀爱","singer":"Faye詹雯婷","category":"二字歌"},
+            {"name":"倔强","singer":"五月天","category":"二字歌"},
+            {"name":"咖啡","singer":"张学友","category":"二字歌"},
+            {"name":"靠近","singer":"袁娅维","category":"二字歌"},
+            {"name":"可乐","singer":"赵紫骅","category":"二字歌"},
+            {"name":"孔雀","singer":"薛之谦","category":"二字歌"},
+            {"name":"夸张","singer":"薛之谦","category":"二字歌"},
+            {"name":"来迟","singer":"戴羽彤","category":"二字歌"},
+            {"name":"烂泥","singer":"草东没有派对","category":"二字歌"},
+            {"name":"老街","singer":"李荣浩","category":"二字歌"},
+            {"name":"泪海","singer":"许茹芸","category":"二字歌"},
+            {"name":"离人","singer":"张学友","category":"二字歌"},
+            {"name":"李白","singer":"李荣浩","category":"二字歌"},
+            {"name":"理由","singer":"郑润泽","category":"二字歌"},
+            {"name":"练习","singer":"刘德华","category":"二字歌"},
+            {"name":"领悟","singer":"辛晓琪","category":"二字歌"},
+            {"name":"流年","singer":"王菲","category":"二字歌"},
+            {"name":"流沙","singer":"陶喆","category":"二字歌"},
+            {"name":"路口","singer":"张震岳","category":"二字歌"},
+            {"name":"绿光","singer":"孙燕姿","category":"二字歌"},
+        ];
+
+        // 1.3 分配主播对应的歌单（可自定义调整）
+        const anchorSongMap = {
+            "anchor1": allSongs.filter(song => song.category === "飘站歌"), // 主播A：飘站歌
+            "anchor2": allSongs.filter(song => song.category === "古风歌"), // 主播B：古风歌
+            "anchor3": allSongs.filter(song => song.category === "粤语歌"), // 主播C：粤语歌
+            "all": allSongs // 全部主播：所有歌曲
+        };
+
+        // ========== 2. 全局状态管理 ==========
+        let currentAnchor = "all"; // 默认选中「全部主播」
+        let currentPage = 1; // 当前页码
+        const pageSize = 12; // 每页显示歌曲数量
+        let filteredSongs = []; // 筛选后的歌曲（主播+搜索+分类）
+
+        // ========== 3. 初始化页面 ==========
+        initPage();
+        function initPage() {
+            // 3.1 渲染主播选择按钮
+            renderAnchorButtons();
+            // 3.2 渲染分类下拉框
+            renderCategoryOptions();
+            // 3.3 初始化歌曲列表
+            updateSongList();
+            // 3.4 绑定事件监听
+            bindEvents();
+        }
+
+        // ========== 4. 渲染主播选择按钮 ==========
+        function renderAnchorButtons() {
+            const anchorArea = document.getElementById("anchorSelectArea");
+            anchorArea.innerHTML = anchors.map(anchor => `
+                <button class="anchor-btn ${anchor.id === currentAnchor ? 'active' : ''}" data-anchor-id="${anchor.id}">
+                    ${anchor.name}
+                </button>
+            `).join("");
+        }
+
+        // ========== 5. 渲染分类下拉框 ==========
+        function renderCategoryOptions() {
+            const categorySelect = document.getElementById("categorySelect");
+            // 获取所有分类（去重）
+            const categories = [...new Set(allSongs.map(song => song.category))];
+            // 渲染分类选项
+            categorySelect.innerHTML += categories.map(category => `
+                <option value="${category}">${category}</option>
+            `).join("");
+        }
+
+        // ========== 6. 更新歌曲列表（核心逻辑） ==========
+        function updateSongList() {
+            // 6.1 获取当前主播的歌单
+            let anchorSongs = anchorSongMap[currentAnchor] || [];
+            // 6.2 应用搜索筛选
+            const searchKeyword = document.getElementById("searchInput").value.trim().toLowerCase();
+            if (searchKeyword) {
+                anchorSongs = anchorSongs.filter(song => 
+                    song.name.toLowerCase().includes(searchKeyword) || 
+                    song.singer.toLowerCase().includes(searchKeyword)
+                );
+            }
+            // 6.3 应用分类筛选
+            const selectedCategory = document.getElementById("categorySelect").value;
+            if (selectedCategory !== "all") {
+                anchorSongs = anchorSongs.filter(song => song.category === selectedCategory);
+            }
+            // 6.4 保存筛选后的歌单
+            filteredSongs = anchorSongs;
+            // 6.5 分页处理
+            const totalPages = Math.ceil(filteredSongs.length / pageSize);
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const paginatedSongs = filteredSongs.slice(startIndex, endIndex);
+            // 6.6 渲染歌曲列表
+            renderSongList(paginatedSongs);
+            // 6.7 渲染分页控件
+            renderPagination(totalPages);
+        }
+
+        // ========== 7. 渲染歌曲列表 ==========
+        function renderSongList(songs) {
+            const songList = document.getElementById("songList");
+            if (songs.length === 0) {
+                songList.innerHTML = `<div class="no-result">暂无符合条件的歌曲</div>`;
+                return;
+            }
+            songList.innerHTML = songs.map(song => `
+                <li class="song-card category-${song.category}">
+                    <div class="song-name">${song.name}</div>
+                    <div class="song-info">
+                        <div class="song-singer">🎤 ${song.singer}</div>
+                        <div class="song-category">${song.category}</div>
+                    </div>
+                </li>
+            `).join("");
+        }
+
+        // ========== 8. 渲染分页控件 ==========
+        function renderPagination(totalPages) {
+            const pagination = document.getElementById("pagination");
+            pagination.innerHTML = "";
+
+            // 上一页按钮
+            const prevBtn = document.createElement("button");
+            prevBtn.className = "pagination-btn";
+            prevBtn.textContent = "上一页";
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.addEventListener("click", () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    updateSongList();
+                }
+            });
+            pagination.appendChild(prevBtn);
+
+            // 页码按钮（最多显示5个页码）
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement("button");
+                pageBtn.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
+                pageBtn.textContent = i;
+                pageBtn.addEventListener("click", () => {
+                    currentPage = i;
+                    updateSongList();
+                });
+                pagination.appendChild(pageBtn);
+            }
+
+            // 下一页按钮
+            const nextBtn = document.createElement("button");
+            nextBtn.className = "pagination-btn";
+            nextBtn.textContent = "下一页";
+            nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+            nextBtn.addEventListener("click", () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    updateSongList();
+                }
+            });
+            pagination.appendChild(nextBtn);
+        }
+
+        // ========== 9. 绑定所有事件 ==========
+        function bindEvents() {
+            // 9.1 主播选择事件
+            document.getElementById("anchorSelectArea").addEventListener("click", (e) => {
+                if (e.target.classList.contains("anchor-btn")) {
+                    // 切换选中状态
+                    document.querySelectorAll(".anchor-btn").forEach(btn => btn.classList.remove("active"));
+                    e.target.classList.add("active");
+                    // 更新当前主播
+                    currentAnchor = e.target.dataset.anchorId;
+                    // 重置页码
+                    currentPage = 1;
+                    // 更新歌曲列表
+                    updateSongList();
+                }
+            });
+
+            // 9.2 搜索框事件
+            document.getElementById("searchInput").addEventListener("input", () => {
+                currentPage = 1;
+                updateSongList();
+            });
+
+            // 9.3 分类选择事件
+            document.getElementById("categorySelect").addEventListener("change", () => {
+                currentPage = 1;
+                updateSongList();
+            });
+
+            // 9.4 盲盒按钮事件
+            document.getElementById("blindBoxBtn").addEventListener("click", () => {
+                if (filteredSongs.length === 0) {
+                    alert("暂无可抽取的歌曲");
+                    return;
+                }
+                // 随机抽取一首
+                const randomSong = filteredSongs[Math.floor(Math.random() * filteredSongs.length)];
+                // 渲染盲盒弹窗
+                document.getElementById("modalSong").innerHTML = `
+                    <div class="modal-song-name">${randomSong.name}</div>
+                    <div class="modal-song-singer">${randomSong.singer}</div>
+                `;
+                // 显示弹窗
+                document.getElementById("blindBoxModal").classList.add("active");
+            });
+
+            // 9.5 关闭盲盒弹窗
+            document.getElementById("closeModalBtn").addEventListener("click", () => {
+                document.getElementById("blindBoxModal").classList.remove("active");
+            });
+
+            // 9.6 点击弹窗外部关闭
+            document.getElementById("blindBoxModal").addEventListener("click", (e) => {
+                if (e.target === document.getElementById("blindBoxModal")) {
+                    document.getElementById("blindBoxModal").classList.remove("active");
+                }
+            });
+        }
+    </script>
+</body>
+</html>

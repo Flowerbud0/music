@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>oO吼的专属点歌台</title>
+    <title>琉璃瓦 专属点歌台</title>
     <style>
         /* 保留原有所有样式,以下是新增+微调样式 */
         * {
@@ -34,38 +34,6 @@
             font-weight: 700;
             letter-spacing: 2px;
         }
-
-        /* ========== 新增：主播选择样式 ========== */
-        .anchor-select-area {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 12px;
-        }
-        .anchor-btn {
-            padding: 8px 20px;
-            border: 2px solid #e0e6ed;
-            border-radius: 8px;
-            background: #fff;
-            color: #2c3e50;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .anchor-btn:hover {
-            border-color: #4a90e2;
-            color: #4a90e2;
-        }
-        .anchor-btn.active {
-            background: #4a90e2;
-            color: #fff;
-            border-color: #4a90e2;
-        }
-
         .function-bar {
             display: flex;
             flex-wrap: wrap;
@@ -255,9 +223,9 @@
         .category-HzOne1 { border-left-color: #4a90e2; }
         .category-Bubble_ls { border-left-color: #9b59b6; }
         .category-瓜呱瓜吖 { border-left-color: #e74c3c; }
-        
+       
 
-        /* 分页样式 */
+        /* ============= 新增：分页样式 ============= */
         .pagination {
             display: flex;
             justify-content: center;
@@ -294,12 +262,7 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="page-title">oO吼的专属点歌台</h1>
-
-        <!-- ========== 新增：主播选择区域 ========== -->
-        <div class="anchor-select-area" id="anchorSelectArea">
-            <!-- 主播按钮会通过JS自动生成 -->
-        </div>
+        <h1 class="page-title">琉璃瓦 专属点歌台</h1>
 
         <!-- 功能区：搜索+分类+盲盒 -->
         <div class="function-bar">
@@ -316,7 +279,7 @@
         <!-- 歌曲列表容器 -->
         <ul class="song-list" id="songList"></ul>
 
-        <!-- 分页容器 -->
+        <!-- ============= 新增：分页容器 ============= -->
         <div class="pagination" id="pagination"></div>
 
         <!-- 盲盒弹窗 -->
@@ -333,16 +296,7 @@
     </div>
 
     <script>
-        // ========== 1. 定义主播和对应歌单 ==========
-        // 1.1 主播列表（可自定义添加/修改）
-        const anchors = [
-            { id: "anchor1", name: "HzOne1" },
-            { id: "anchor2", name: "Bubble_ls" },
-            { id: "anchor3", name: "瓜呱瓜吖" },
-            { id: "all", name: "全部主播" } // 可选：显示所有主播的歌单
-        ];
-
-        // 1.2 原始歌曲数据（保留原有）
+        // ========== 1. 歌曲数据（已修复语法错误） ==========
         const allSongs = [
             {"name":"枫","singer":"HzOne1","category":"HzOne1"}, 
  {"name":"默","singer":"HzOne1","category":"HzOne1"}, 
@@ -1348,206 +1302,201 @@
  {"name":"去有风的地方","singer":"瓜呱瓜吖","category":"瓜呱瓜吖"},
         ];
 
-        // 1.3 分配主播对应的歌单（可自定义调整）
-        const anchorSongMap = {
-            "anchor1": allSongs.filter(song => song.category === "HzOne1"), // 主播A：飘站歌
-            "anchor2": allSongs.filter(song => song.category === "Bubble_ls"), // 主播B：古风歌
-            "anchor3": allSongs.filter(song => song.category === "瓜呱瓜吖"), // 主播C：粤语歌
-            "all": allSongs // 全部主播：所有歌曲
-        };
+        // ============= 新增：分页核心全局变量 =============
+        let currentPage = 1; // 当前页码,默认第1页
+        const pageSize = 20; // 每页显示20条,可自行修改（比如改10/30）
+        let filteredSongs = [...allSongs]; // 存储筛选后的歌曲,默认是全部歌曲
 
-        // ========== 2. 全局状态管理 ==========
-        let currentAnchor = "all"; // 默认选中「全部主播」
-        let currentPage = 1; // 当前页码
-        const pageSize = 12; // 每页显示歌曲数量
-        let filteredSongs = []; // 筛选后的歌曲（主播+搜索+分类）
-
-        // ========== 3. 初始化页面 ==========
-        initPage();
-        function initPage() {
-            // 3.1 渲染主播选择按钮
-            renderAnchorButtons();
-            // 3.2 渲染分类下拉框
-            renderCategoryOptions();
-            // 3.3 初始化歌曲列表
-            updateSongList();
-            // 3.4 绑定事件监听
-            bindEvents();
+        // ========== 2. 核心工具函数 ==========
+        // 获取所有分类（去重）
+        function getCategories() {
+            const categories = new Set();
+            allSongs.forEach(song => categories.add(song.category));
+            return Array.from(categories);
         }
 
-        // ========== 4. 渲染主播选择按钮 ==========
-        function renderAnchorButtons() {
-            const anchorArea = document.getElementById("anchorSelectArea");
-            anchorArea.innerHTML = anchors.map(anchor => `
-                <button class="anchor-btn ${anchor.id === currentAnchor ? 'active' : ''}" data-anchor-id="${anchor.id}">
-                    ${anchor.name}
-                </button>
-            `).join("");
+        // 新增：计算总页数
+        function getTotalPages() {
+            return Math.ceil(filteredSongs.length / pageSize);
         }
 
-        // ========== 5. 渲染分类下拉框 ==========
-        function renderCategoryOptions() {
-            const categorySelect = document.getElementById("categorySelect");
-            // 获取所有分类（去重）
-            const categories = [...new Set(allSongs.map(song => song.category))];
-            // 渲染分类选项
-            categorySelect.innerHTML += categories.map(category => `
-                <option value="${category}">${category}</option>
-            `).join("");
+        // 新增：获取当前页需要渲染的歌曲
+        function getCurrentPageSongs() {
+            const startIndex = (currentPage - 1) * pageSize; // 起始索引
+            const endIndex = startIndex + pageSize; // 结束索引
+            return filteredSongs.slice(startIndex, endIndex); // 截取数组,返回当前页数据
         }
 
-        // ========== 6. 更新歌曲列表（核心逻辑） ==========
-        function updateSongList() {
-            // 6.1 获取当前主播的歌单
-            let anchorSongs = anchorSongMap[currentAnchor] || [];
-            // 6.2 应用搜索筛选
-            const searchKeyword = document.getElementById("searchInput").value.trim().toLowerCase();
-            if (searchKeyword) {
-                anchorSongs = anchorSongs.filter(song => 
-                    song.name.toLowerCase().includes(searchKeyword) || 
-                    song.singer.toLowerCase().includes(searchKeyword)
-                );
-            }
-            // 6.3 应用分类筛选
-            const selectedCategory = document.getElementById("categorySelect").value;
-            if (selectedCategory !== "all") {
-                anchorSongs = anchorSongs.filter(song => song.category === selectedCategory);
-            }
-            // 6.4 保存筛选后的歌单
-            filteredSongs = anchorSongs;
-            // 6.5 分页处理
-            const totalPages = Math.ceil(filteredSongs.length / pageSize);
-            const startIndex = (currentPage - 1) * pageSize;
-            const endIndex = startIndex + pageSize;
-            const paginatedSongs = filteredSongs.slice(startIndex, endIndex);
-            // 6.6 渲染歌曲列表
-            renderSongList(paginatedSongs);
-            // 6.7 渲染分页控件
-            renderPagination(totalPages);
-        }
+        // 改造：渲染歌曲列表（适配分页,渲染当前页数据）
+        function renderSongList() {
+            const songListEl = document.getElementById('songList');
+            songListEl.innerHTML = ''; // 清空原有内容
+            const displaySongs = getCurrentPageSongs(); // 获取当前页歌曲
 
-        // ========== 7. 渲染歌曲列表 ==========
-        function renderSongList(songs) {
-            const songList = document.getElementById("songList");
-            if (songs.length === 0) {
-                songList.innerHTML = `<div class="no-result">暂无符合条件的歌曲</div>`;
+            if (displaySongs.length === 0) {
+                songListEl.innerHTML = '<div class="no-result">暂无匹配的歌曲~</div>';
                 return;
             }
-            songList.innerHTML = songs.map(song => `
-                <li class="song-card category-${song.category}">
+
+            displaySongs.forEach(song => {
+                const li = document.createElement('li');
+                li.className = `song-card category-${song.category}`;
+                li.innerHTML = `
                     <div class="song-name">${song.name}</div>
                     <div class="song-info">
-                        <div class="song-singer">🎤 ${song.singer}</div>
+                        <div class="song-singer">🎤 ${song.singer || '未知歌手'}</div>
                         <div class="song-category">${song.category}</div>
                     </div>
-                </li>
-            `).join("");
+                `;
+                songListEl.appendChild(li);
+            });
         }
 
-        // ========== 8. 渲染分页控件 ==========
-        function renderPagination(totalPages) {
-            const pagination = document.getElementById("pagination");
-            pagination.innerHTML = "";
+        // 新增：渲染分页按钮（自动生成页码,处理禁用/激活）
+        function renderPagination() {
+            const paginationEl = document.getElementById('pagination');
+            paginationEl.innerHTML = ''; // 清空原有分页
+            const totalPages = getTotalPages();
+
+            // 无数据时隐藏分页
+            if (totalPages <= 1) {
+                paginationEl.style.display = 'none';
+                return;
+            }
+            paginationEl.style.display = 'flex';
 
             // 上一页按钮
-            const prevBtn = document.createElement("button");
-            prevBtn.className = "pagination-btn";
-            prevBtn.textContent = "上一页";
-            prevBtn.disabled = currentPage === 1;
-            prevBtn.addEventListener("click", () => {
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'pagination-btn';
+            prevBtn.textContent = '上一页';
+            prevBtn.disabled = currentPage === 1; // 第1页禁用
+            prevBtn.addEventListener('click', () => {
                 if (currentPage > 1) {
                     currentPage--;
-                    updateSongList();
+                    renderSongList();
+                    renderPagination();
                 }
             });
-            pagination.appendChild(prevBtn);
+            paginationEl.appendChild(prevBtn);
 
-            // 页码按钮（最多显示5个页码）
-            const startPage = Math.max(1, currentPage - 2);
-            const endPage = Math.min(totalPages, currentPage + 2);
-            for (let i = startPage; i <= endPage; i++) {
-                const pageBtn = document.createElement("button");
+            // 数字页码按钮（生成所有页码）
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('button');
                 pageBtn.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
                 pageBtn.textContent = i;
-                pageBtn.addEventListener("click", () => {
+                pageBtn.addEventListener('click', () => {
                     currentPage = i;
-                    updateSongList();
+                    renderSongList();
+                    renderPagination();
                 });
-                pagination.appendChild(pageBtn);
+                paginationEl.appendChild(pageBtn);
             }
 
             // 下一页按钮
-            const nextBtn = document.createElement("button");
-            nextBtn.className = "pagination-btn";
-            nextBtn.textContent = "下一页";
-            nextBtn.disabled = currentPage === totalPages || totalPages === 0;
-            nextBtn.addEventListener("click", () => {
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'pagination-btn';
+            nextBtn.textContent = '下一页';
+            nextBtn.disabled = currentPage === totalPages; // 最后一页禁用
+            nextBtn.addEventListener('click', () => {
                 if (currentPage < totalPages) {
                     currentPage++;
-                    updateSongList();
+                    renderSongList();
+                    renderPagination();
                 }
             });
-            pagination.appendChild(nextBtn);
+            paginationEl.appendChild(nextBtn);
         }
 
-        // ========== 9. 绑定所有事件 ==========
+        // 初始化分类下拉框
+        function initCategorySelect() {
+            const categorySelectEl = document.getElementById('categorySelect');
+            const categories = getCategories();
+            
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categorySelectEl.appendChild(option);
+            });
+        }
+
+        // 随机抽取盲盒歌曲
+        function randomSong() {
+            const randomIndex = Math.floor(Math.random() * allSongs.length);
+            return allSongs[randomIndex];
+        }
+
+        // ========== 3. 事件绑定 ==========
         function bindEvents() {
-            // 9.1 主播选择事件
-            document.getElementById("anchorSelectArea").addEventListener("click", (e) => {
-                if (e.target.classList.contains("anchor-btn")) {
-                    // 切换选中状态
-                    document.querySelectorAll(".anchor-btn").forEach(btn => btn.classList.remove("active"));
-                    e.target.classList.add("active");
-                    // 更新当前主播
-                    currentAnchor = e.target.dataset.anchorId;
-                    // 重置页码
-                    currentPage = 1;
-                    // 更新歌曲列表
-                    updateSongList();
-                }
-            });
+            // 搜索框事件（实时筛选）
+            const searchInputEl = document.getElementById('searchInput');
+            searchInputEl.addEventListener('input', filterSongs);
 
-            // 9.2 搜索框事件
-            document.getElementById("searchInput").addEventListener("input", () => {
-                currentPage = 1;
-                updateSongList();
-            });
+            // 分类下拉框事件
+            const categorySelectEl = document.getElementById('categorySelect');
+            categorySelectEl.addEventListener('change', filterSongs);
 
-            // 9.3 分类选择事件
-            document.getElementById("categorySelect").addEventListener("change", () => {
-                currentPage = 1;
-                updateSongList();
-            });
-
-            // 9.4 盲盒按钮事件
-            document.getElementById("blindBoxBtn").addEventListener("click", () => {
-                if (filteredSongs.length === 0) {
-                    alert("暂无可抽取的歌曲");
-                    return;
-                }
-                // 随机抽取一首
-                const randomSong = filteredSongs[Math.floor(Math.random() * filteredSongs.length)];
-                // 渲染盲盒弹窗
-                document.getElementById("modalSong").innerHTML = `
-                    <div class="modal-song-name">${randomSong.name}</div>
-                    <div class="modal-song-singer">${randomSong.singer}</div>
+            // 盲盒按钮事件
+            const blindBoxBtnEl = document.getElementById('blindBoxBtn');
+            const blindBoxModalEl = document.getElementById('blindBoxModal');
+            const modalSongEl = document.getElementById('modalSong');
+            
+            blindBoxBtnEl.addEventListener('click', () => {
+                const randomSongData = randomSong();
+                modalSongEl.innerHTML = `
+                    <div class="modal-song-name">${randomSongData.name}</div>
+                    <div class="modal-song-singer">${randomSongData.singer || '未知歌手'}</div>
                 `;
-                // 显示弹窗
-                document.getElementById("blindBoxModal").classList.add("active");
+                blindBoxModalEl.classList.add('active');
             });
 
-            // 9.5 关闭盲盒弹窗
-            document.getElementById("closeModalBtn").addEventListener("click", () => {
-                document.getElementById("blindBoxModal").classList.remove("active");
+            // 关闭弹窗事件
+            const closeModalBtnEl = document.getElementById('closeModalBtn');
+            closeModalBtnEl.addEventListener('click', () => {
+                blindBoxModalEl.classList.remove('active');
             });
 
-            // 9.6 点击弹窗外部关闭
-            document.getElementById("blindBoxModal").addEventListener("click", (e) => {
-                if (e.target === document.getElementById("blindBoxModal")) {
-                    document.getElementById("blindBoxModal").classList.remove("active");
+            // 点击弹窗外层关闭
+            blindBoxModalEl.addEventListener('click', (e) => {
+                if (e.target === blindBoxModalEl) {
+                    blindBoxModalEl.classList.remove('active');
                 }
             });
         }
+
+        // 改造：筛选歌曲（搜索+分类,筛选后重置分页为第1页）
+        function filterSongs() {
+            const searchKeyword = document.getElementById('searchInput').value.trim().toLowerCase();
+            const selectedCategory = document.getElementById('categorySelect').value;
+
+            // 重新筛选歌曲
+            filteredSongs = allSongs.filter(song => {
+                const matchCategory = selectedCategory === 'all' || song.category === selectedCategory;
+                const matchSearch = song.name.toLowerCase().includes(searchKeyword) || 
+                                    song.singer.toLowerCase().includes(searchKeyword);
+                return matchCategory && matchSearch;
+            });
+
+            currentPage = 1; // 关键：筛选后重置为第1页
+            renderSongList(); // 渲染筛选后当前页（第1页）
+            renderPagination(); // 重新渲染分页
+        }
+
+        // ========== 4. 初始化页面 ==========
+        function init() {
+            initCategorySelect(); // 初始化分类下拉框
+            renderSongList(); // 渲染第1页歌曲
+            renderPagination(); // 初始化渲染分页
+            bindEvents(); // 绑定所有事件
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
+
+
+
+
+
